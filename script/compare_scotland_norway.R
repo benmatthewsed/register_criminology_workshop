@@ -122,15 +122,100 @@ bind_rows(
 )
 
 
+# plot lines --------------------------------------------------------------
+
+line_plot <- 
 combined_spline %>% 
+  filter(year < 2016) %>% 
+  mutate(year = as.integer(year)) %>% 
+  ggplot(aes(x = age, y = approx_spline, colour = year, group = year)) +
+  geom_line() +
+  facet_grid(sex ~ country, scales = "free_y") +
+  scale_colour_viridis_c(option = "plasma",
+                         breaks = c(2005, 2010, 2015)) +
+  labs(x = "Age",
+       y = "Conviction rate per 10,000 (spline approximation)",
+       colour = "Year",
+       caption = "WARNING: Data are estimated from aggregated age-bands via spline interpolation and may not be reliable!")
+  
+ggsave(
+  here::here("figures", "norway_scotland_line_plot.png"),
+  line_plot,
+  type = "cairo-png",
+  height = 6, width = 8
+)
+
+
+# plot lexis --------------------------------------------------------------
+
+
+female_rate_plot <- 
+combined_spline %>% 
+  filter(sex == "Female") %>% 
   ggplot(aes(x = year, y = age, fill = approx_spline)) +
   geom_tile() +
   metR::geom_contour_tanaka(aes(z = approx_spline)) +
-  facet_grid(country ~ sex) +
-  scale_fill_viridis_c() +
-  coord_equal()
+  facet_grid(sex ~ country) +
+  scale_fill_viridis_c(option = "plasma") +
+  coord_equal() +
+  geom_vline(xintercept = seq(2005, 2015, by = 5),
+             linetype = "dashed",
+             colour = "grey90",
+             alpha = 0.3) +
+  geom_hline(yintercept = seq(15, 55, by = 5),
+             linetype = "dashed",
+             colour = "grey90",
+             alpha = 0.3) +
+  geom_abline(slope = 1,
+              intercept = seq(-1950, - 2050, by = -5),
+              linetype = "dashed",
+              colour = "grey90",
+              alpha = 0.3) +
+  labs(x = "Year",
+       y = "Age",
+       fill = "Conviction rate\n(spline\ninterpolation)")
 
+male_rate_plot <- 
 combined_spline %>% 
+  filter(sex == "Male") %>% 
+  ggplot(aes(x = year, y = age, fill = approx_spline)) +
+  geom_tile() +
+  metR::geom_contour_tanaka(aes(z = approx_spline)) +
+  facet_grid(sex ~ country) +
+  scale_fill_viridis_c(option = "plasma") +
+  coord_equal() +
+  geom_vline(xintercept = seq(2005, 2015, by = 5),
+             linetype = "dashed",
+             colour = "grey90",
+             alpha = 0.3) +
+  geom_hline(yintercept = seq(15, 55, by = 5),
+             linetype = "dashed",
+             colour = "grey90",
+             alpha = 0.3) +
+  geom_abline(slope = 1,
+              intercept = seq(-1950, - 2050, by = -5),
+              linetype = "dashed",
+              colour = "grey90",
+              alpha = 0.3) +
+  labs(x = "Year",
+       y = "Age",
+       fill = "Conviction rate\n(spline\ninterpolation)")
+
+rates_plot <- 
+cowplot::plot_grid(
+  female_rate_plot, male_rate_plot
+)
+
+ggsave(
+  here::here("figures", "scotland_norway_rates_plot.png"),
+  rates_plot,
+  type = "cairo-png",
+  height = 6, width = 10
+)
+
+female_comp <- 
+combined_spline %>% 
+  filter(year < 2016, sex == "Female") %>% 
   spread(country, approx_spline) %>% 
   mutate(diff =  `Scotland` - `Norway`) %>% 
   ggplot(aes(x = year, y = age, fill = diff)) +
@@ -138,4 +223,59 @@ combined_spline %>%
   metR::geom_contour_tanaka(aes(z = diff)) +
   facet_grid( ~ sex) +
   scale_fill_gradient2() +
-  coord_equal()
+  geom_vline(xintercept = seq(2005, 2015, by = 5),
+             linetype = "dashed",
+             colour = "grey70",
+             alpha = 0.3) +
+  geom_hline(yintercept = seq(15, 55, by = 5),
+             linetype = "dashed",
+             colour = "grey70",
+             alpha = 0.3) +
+  geom_abline(slope = 1,
+              intercept = seq(-1950, - 2050, by = -5),
+              linetype = "dashed",
+              colour = "grey70",
+              alpha = 0.3) +
+  coord_equal() +
+  labs(x = "Year",
+       y = "Age",
+       fill = "Difference")
+
+male_comp <- 
+combined_spline %>% 
+  filter(year < 2016, sex == "Male") %>% 
+  spread(country, approx_spline) %>% 
+  mutate(diff =  `Scotland` - `Norway`) %>% 
+  ggplot(aes(x = year, y = age, fill = diff)) +
+  geom_tile() +
+  metR::geom_contour_tanaka(aes(z = diff)) +
+  facet_grid( ~ sex) +
+  scale_fill_gradient2() +
+  geom_vline(xintercept = seq(2005, 2015, by = 5),
+             linetype = "dashed",
+             colour = "grey70",
+             alpha = 0.3) +
+  geom_hline(yintercept = seq(15, 55, by = 5),
+             linetype = "dashed",
+             colour = "grey70",
+             alpha = 0.3) +
+  geom_abline(slope = 1,
+              intercept = seq(-1950, - 2050, by = -5),
+              linetype = "dashed",
+              colour = "grey70",
+              alpha = 0.3) +
+  coord_equal() +
+  labs(x = "Year",
+       y = "Age",
+       fill = "Difference",
+       caption = "Blue = higher in Scotland, red = higher in Norway")
+
+comp_plot <- cowplot::plot_grid(female_comp, male_comp, align = "h")
+
+ggsave(
+  here::here("figures", "scotland_norway_comparison.png"),
+  comp_plot,
+  type = "cairo-png",
+  width = 8,
+  height = 6
+)
