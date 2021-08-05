@@ -136,7 +136,10 @@ combined_spline %>%
   labs(x = "Age",
        y = "Conviction rate per 10,000 (spline approximation)",
        colour = "Year",
-       caption = "WARNING: Data are estimated from aggregated age-bands via spline interpolation and may not be reliable!")
+       caption = "WARNING: Data are estimated from aggregated age-bands via spline interpolation and may not be reliable!
+       Scottish data are all convictions from SOI.
+       Norwegian data are 'All types of sanctions' downloaded from https://www.ssb.no/en/statbank/table/10623"
+)
   
 ggsave(
   here::here("figures", "norway_scotland_line_plot.png"),
